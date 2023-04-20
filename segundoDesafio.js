@@ -29,19 +29,19 @@ class ProductManager {
         stock: stock,
         id: this.id,
       };
- 
-        if (fs.existsSync(this.path)) {
-          let read = fs.readFileSync(this.path, "utf-8");
-          this.products = JSON.parse(read);
-        } 
-        if (this.products.find((producto) => producto.code === product.code)) {
-          console.log("Ya existe un producto con ese codigo");
-        } else {
-          this.products.push(product);
-          fs.writeFileSync(this.path, JSON.stringify(this.products), "utf-8");
-          this.id++;
-          console.log("El archivo se guardo correctamente");
-        }
+
+      if (fs.existsSync(this.path)) {
+        let read = fs.readFileSync(this.path, "utf-8");
+        this.products = JSON.parse(read);
+      }
+      if (this.products.find((producto) => producto.code === product.code)) {
+        console.log("Ya existe un producto con ese codigo");
+      } else {
+        this.products.push(product);
+        fs.writeFileSync(this.path, JSON.stringify(this.products), "utf-8");
+        this.id++;
+        console.log("El archivo se guardo correctamente");
+      }
     } else {
       console.log(
         "No se puede crear el producto. Faltan definir caracteristicas"
@@ -106,7 +106,12 @@ class ProductManager {
         }
 
         //ANTES DE ACTUALIZAR EL PRODUCTO, VERIFICO QUE EL NUEVO CODIGO DEL PRODUCTO ACTUALIZADO NO EXISTA
-        if (this.products.find((product) => product.code === producto.code && product.id !== producto.id)) {
+        if (
+          this.products.find(
+            (product) =>
+              product.code === producto.code && product.id !== producto.id
+          )
+        ) {
           console.log("Ya existe un producto con ese codigo");
         } else {
           this.products[index] = producto;
@@ -115,10 +120,10 @@ class ProductManager {
         }
       }
     });
-    if(isUpdated){
-      console.log('Se ha actualizado el producto correctamente')
-    }else{
-      console.log('No se ha podido actualizar el producto')
+    if (isUpdated) {
+      console.log("Se ha actualizado el producto correctamente");
+    } else {
+      console.log("No se ha podido actualizar el producto");
     }
   }
 
@@ -217,8 +222,10 @@ instanciaProducto.updateProduct(1, {
   stock: "Nuevo stock",
 });
 
-
-//ELIMINO EL OBJETO CON ID 2, QUEDARIAN LOS OBJETOS CON ID 1 Y 3
+//Elimino el producto con ID 2, quedarian los productos con ID 1 y 3
 instanciaProducto.deleteProduct(2);
+
+//Intento eliminar un producto con un ID que no existe
+instanciaProducto.deleteProduct(8);
 
 //COMO RESULTADO FINAL QUEDAN 2 PRODUCTOS, UNO CON ID 1 QUE FUE ACTUALIZADO Y OTRO CON ID 3 QUE QUEDA ORIGINAL COMO FUE CREADO.
