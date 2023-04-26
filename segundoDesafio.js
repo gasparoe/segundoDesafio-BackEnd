@@ -9,7 +9,7 @@ class ProductManager {
     this.path = path;
   }
 
-  addProduct(title, description, price, thumbnail, code, stock) {
+  async addProduct(title, description, price, thumbnail, code, stock) {
     if (
       title != undefined &&
       description != undefined &&
@@ -30,17 +30,29 @@ class ProductManager {
         id: this.id,
       };
 
-      if (fs.existsSync(this.path)) {
-        let read = fs.readFileSync(this.path, "utf-8");
-        this.products = JSON.parse(read);
-      }
-      if (this.products.find((producto) => producto.code === product.code)) {
-        console.log("Ya existe un producto con ese codigo");
-      } else {
-        this.products.push(product);
-        fs.writeFileSync(this.path, JSON.stringify(this.products), "utf-8");
-        this.id++;
-        console.log("El archivo se guardo correctamente");
+      try {
+        const data = await fs.promises.readFile(this.path, "utf-8");
+        let products = [];
+        if (data.length > 1) {
+          products = JSON.parse(data);
+        }
+        this.products = products;
+        console.log("termine de leer");
+
+        if (this.products.find((producto) => producto.code === product.code)) {
+          console.log("Ya existe un producto con ese codigo");
+        } else {
+          this.products.push(product);
+          await fs.promises.writeFile(
+            this.path,
+            JSON.stringify(this.products),
+            "utf-8"
+          );
+          this.id++;
+          console.log("El archivo se guardo correctamente");
+        }
+      } catch (err) {
+        console.error(`Error ${err}`);
       }
     } else {
       console.log(
@@ -49,102 +61,136 @@ class ProductManager {
     }
   }
 
-  getProducts() {
-    if (fs.existsSync(this.path)) {
-      let read = fs.readFileSync(this.path, "utf-8");
-      this.products = JSON.parse(read);
-    }
-    return this.products;
-  }
-
-  getProductById(id) {
-    if (fs.existsSync(this.path)) {
-      let read = fs.readFileSync(this.path, "utf-8");
-      this.products = JSON.parse(read);
-    }
-    let product = this.products.find((producto) => producto.id === id);
-    if (product) {
-      console.log(`Se ha encontrado el producto con ID ${id}.`);
-      return product;
-    } else {
-      console.error("Not found");
-      return;
-    }
-  }
-
-  updateProduct(id, nuevoProducto) {
-    let isUpdated = false;
-
-    if (fs.existsSync(this.path)) {
-      let read = fs.readFileSync(this.path, "utf-8");
-      this.products = JSON.parse(read);
-    }
-    this.products.forEach((producto, index) => {
-      if (producto.id === id) {
-        if (nuevoProducto.title != undefined) {
-          producto.title = nuevoProducto.title;
-        }
-
-        if (nuevoProducto.description != undefined) {
-          producto.description = nuevoProducto.description;
-        }
-
-        if (nuevoProducto.price != undefined) {
-          producto.price = nuevoProducto.price;
-        }
-
-        if (nuevoProducto.thumbnail != undefined) {
-          producto.thumbnail = nuevoProducto.thumbnail;
-        }
-
-        if (nuevoProducto.code != undefined) {
-          producto.code = nuevoProducto.code;
-        }
-
-        if (nuevoProducto.stock != undefined) {
-          producto.stock = nuevoProducto.stock;
-        }
-
-        //ANTES DE ACTUALIZAR EL PRODUCTO, VERIFICO QUE EL NUEVO CODIGO DEL PRODUCTO ACTUALIZADO NO EXISTA
-        if (
-          this.products.find(
-            (product) =>
-              product.code === producto.code && product.id !== producto.id
-          )
-        ) {
-          console.log("Ya existe un producto con ese codigo");
-        } else {
-          this.products[index] = producto;
-          fs.writeFileSync(this.path, JSON.stringify(this.products), "utf-8");
-          isUpdated = true;
-        }
+  async getProducts() {
+    try {
+      const data = await fs.promises.readFile(this.path, "utf-8");
+      let products = [];
+      if (data.length > 1) {
+        products = JSON.parse(data);
       }
-    });
-    if (isUpdated) {
-      console.log("Se ha actualizado el producto correctamente");
-    } else {
-      console.log("No se ha podido actualizar el producto");
+      this.products = products;
+      return this.products;
+    } catch (err) {
+      console.error(`ERROR ${err}`);
     }
   }
 
-  deleteProduct(id) {
-    let isDeleted = false;
-
-    if (fs.existsSync(this.path)) {
-      let read = fs.readFileSync(this.path, "utf-8");
-      this.products = JSON.parse(read);
-    }
-    this.products.forEach((producto, index) => {
-      if (producto.id === id) {
-        this.products.splice(index, 1);
-        isDeleted = true;
+  async getProductById(id) {
+    try {
+      const data = await fs.promises.readFile(this.path, "utf-8");
+      let products = [];
+      if (data.length > 1) {
+        products = JSON.parse(data);
       }
-    });
-    fs.writeFileSync(this.path, JSON.stringify(this.products), "utf-8");
-    if (isDeleted) {
-      console.log("Se elimino el producto correctamente");
-    } else {
-      console.log("No se ha encontrado el producto a eliminar");
+      this.products = products;
+
+      let product = this.products.find((producto) => producto.id === id);
+      if (product) {
+        console.log(`Se ha encontrado el producto con ID ${id}.`);
+        return product;
+      } else {
+        console.error("Not found");
+        return;
+      }
+    } catch (err) {
+      console.error(`ERROR ${err}`);
+    }
+  }
+
+  async updateProduct(id, nuevoProducto) {
+    try {
+      let isUpdated = false;
+      const data = await fs.promises.readFile(this.path, "utf-8");
+      let products = [];
+      if (data.length > 1) {
+        products = JSON.parse(data);
+      }
+      this.products = products;
+
+      this.products.forEach((producto, index) => {
+        if (producto.id === id) {
+          if (nuevoProducto.title != undefined) {
+            producto.title = nuevoProducto.title;
+          }
+
+          if (nuevoProducto.description != undefined) {
+            producto.description = nuevoProducto.description;
+          }
+
+          if (nuevoProducto.price != undefined) {
+            producto.price = nuevoProducto.price;
+          }
+
+          if (nuevoProducto.thumbnail != undefined) {
+            producto.thumbnail = nuevoProducto.thumbnail;
+          }
+
+          if (nuevoProducto.code != undefined) {
+            producto.code = nuevoProducto.code;
+          }
+
+          if (nuevoProducto.stock != undefined) {
+            producto.stock = nuevoProducto.stock;
+          }
+
+          //ANTES DE ACTUALIZAR EL PRODUCTO, VERIFICO QUE EL NUEVO CODIGO DEL PRODUCTO ACTUALIZADO NO EXISTA
+          if (
+            this.products.find(
+              (product) =>
+                product.code === producto.code && product.id !== producto.id
+            )
+          ) {
+            console.log("Ya existe un producto con ese codigo");
+          } else {
+            this.products[index] = producto;
+            isUpdated = true;
+          }
+        }
+      });
+      if (isUpdated) {
+        await fs.promises.writeFile(
+          this.path,
+          JSON.stringify(this.products),
+          "utf-8"
+        );
+        console.log("Se ha actualizado el producto correctamente");
+      } else {
+        console.log("No se ha podido actualizar el producto");
+      }
+    } catch (err) {
+      console.error(`Error ${err}`);
+    }
+  }
+
+  async deleteProduct(id) {
+    try {
+      let isDeleted = false;
+      const data = await fs.promises.readFile(this.path, "utf-8");
+      let products = [];
+      if (data.length > 1) {
+        products = JSON.parse(data);
+      }
+      this.products = products;
+
+      this.products.forEach((producto, index) => {
+        if (producto.id === id) {
+          this.products.splice(index, 1);
+          isDeleted = true;
+        }
+      });
+
+      if (isDeleted) {
+        await fs.promises.writeFile(
+          this.path,
+          JSON.stringify(this.products),
+          "utf-8"
+        );
+        console.log("Se elimino el producto correctamente");
+      } else {
+        console.log("No se ha encontrado el producto a eliminar");
+      }
+    } catch {
+      console.error(`Error ${err}`);
     }
   }
 }
@@ -152,80 +198,101 @@ class ProductManager {
 //Instancia de la clase ProductManager con el path del archivo
 let instanciaProducto = new ProductManager("./products.json");
 
-//Muestro por consola que el array esta vacio inicialmente
-console.log(instanciaProducto.getProducts());
+//Anido promesas para poder ir realizando el testing secuencialmente ya que si no lo hago secuencialmente infuliria en los resultados
+instanciaProducto
+  .getProducts()
+  .then((products) => {
+    console.log(products);
+  })
+  .catch((err) => console.error(`ERROR ${err}`))
+  .then(() => {
+    instanciaProducto
+      .addProduct(
+        "producto prueba",
+        "Este es un producto de prueba",
+        200,
+        "Sin Imagen",
+        "abc123",
+        25
+      )
+      .catch((err) => console.error(`ERROR ${err}`))
+      .then(() => {
+        instanciaProducto
+          .addProduct(
+            "producto prueba 2",
+            "Este es un producto de prueba 2",
+            200,
+            "Sin Imagen",
+            "abc1234",
+            25
+          )
+          .catch((err) => console.error(`ERROR ${err}`))
+          .then(() => {
+            instanciaProducto
+              .addProduct(
+                "producto prueba 3",
+                "Este es un producto de prueba 3",
+                200,
+                "Sin Imagen",
+                "abc12345",
+                25
+              )
+              .catch((err) => console.error(`ERROR ${err}`))
+              .then(() => {
+                instanciaProducto
+                  .getProducts()
+                  .then((products) => {
+                    console.log(products);
+                  })
+                  .catch((err) => console.error(`ERROR ${err}`))
+                  //Los dos getProductById se podrian realizar al mismo tiempo sin importar cual finalice primero, pero deberia usar Promisea.all como mostraste en el ejemplo para que, una vez que finalicen ambas, seguir el proceso de testing.
+                  .then(() => {
+                    instanciaProducto
+                      .getProductById(1)
+                      .then((product) => {
+                        console.log(product);
+                      })
+                      .catch((err) => console.error(`ERROR ${err}`))
+                      .then(() => {
+                        instanciaProducto
+                          .getProductById(8)
+                          .then((product) => {
+                            console.log(product);
+                          })
+                          .catch((err) => console.error(`ERROR ${err}`))
+                          .then(() => {
+                            instanciaProducto
+                              .updateProduct(1, {
+                                title: "Titulo nuevo",
+                                description: "Nueva descripcion",
+                                price: "Nuevo precio",
+                                thumbnail: "Nuevo thumbnail",
+                                code: "Nueco Code",
+                                stock: "Nuevo stock",
+                              })
+                              .catch((err) => console.error(`ERROR ${err}`))
+                              .then(() => {
+                                instanciaProducto
+                                  .updateProduct(1, {
+                                    title: "Titulo nuevo 2",
+                                    description: "Nueva descripcion2",
+                                    price: "Nuevo precio 2",
+                                    thumbnail: "Nuevo thumbnail 2",
+                                    code: "abc12345",
+                                    stock: "Nuevo stock",
+                                  })
+                                  .catch((err) => console.error(`ERROR ${err}`))
+                                  .then(() => {
+                                    //Realizo las dos pruebas al mismo tiempo ya que no importa si una termina antes de otra, no influira en el resultado
+                                    instanciaProducto.deleteProduct(2);
+                                    instanciaProducto.deleteProduct(8);
+                                  });
+                              });
+                          });
+                      });
+                  });
+              });
+          });
+      });
+  });
 
-//Agrego 3 productos para luego poder probar luego con ellos
-instanciaProducto.addProduct(
-  "producto prueba",
-  "Este es un producto de prueba",
-  200,
-  "Sin Imagen",
-  "abc123",
-  25
-);
-
-instanciaProducto.addProduct(
-  "producto prueba 2",
-  "Este es un producto de prueba 2",
-  200,
-  "Sin Imagen",
-  "abc1234",
-  25
-);
-
-instanciaProducto.addProduct(
-  "producto prueba 3",
-  "Este es un producto de prueba 3",
-  200,
-  "Sin Imagen",
-  "abc12345",
-  25
-);
-
-//Muestro por consola el array con los 3 productos creados anteriormente
-console.log(instanciaProducto.getProducts());
-
-//Intento crear un nuevo producto con el mismo codigo que uno de los anteriores
-instanciaProducto.addProduct(
-  "producto prueba",
-  "Este es un producto de prueba",
-  200,
-  "Sin Imagen",
-  "abc123",
-  25
-);
-
-//Busco el producto con ID 1 y muestor por consola el mensaje que se ha encontrado
-console.log(instanciaProducto.getProductById(1));
-
-//Busco el producto con ID 5 y muestor por consola el mensaje NOT FOUND
-console.log(instanciaProducto.getProductById(8));
-
-//Actualizo el producto con ID 1. En este caso paso todos las propiedas, pero podrian ser solo algunas.
-instanciaProducto.updateProduct(1, {
-  title: "Titulo nuevo",
-  description: "Nueva descripcion",
-  price: "Nuevo precio",
-  thumbnail: "Nuevo thumbnail",
-  code: "Nueco Code",
-  stock: "Nuevo stock",
-});
-
-//Intento Actualizr el producto con ID 1 pero poniendo un nuevo codigo que ya existe y muestro que no es posible.
-instanciaProducto.updateProduct(1, {
-  title: "Titulo nuevo 2",
-  description: "Nueva descripcion2",
-  price: "Nuevo precio 2",
-  thumbnail: "Nuevo thumbnail 2",
-  code: "abc12345",
-  stock: "Nuevo stock",
-});
-
-//Elimino el producto con ID 2, quedarian los productos con ID 1 y 3
-instanciaProducto.deleteProduct(2);
-
-//Intento eliminar un producto con un ID que no existe
-instanciaProducto.deleteProduct(8);
-
-//COMO RESULTADO FINAL QUEDAN 2 PRODUCTOS, UNO CON ID 1 QUE FUE ACTUALIZADO Y OTRO CON ID 3 QUE QUEDA ORIGINAL COMO FUE CREADO.
